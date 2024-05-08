@@ -23,6 +23,10 @@ public class CurrenciesHistory {
 
     private static final String TABLE_NAME = "currencies";
 
+    public CurrenciesHistory() {
+        initializeCurrenciesTable();
+    }
+
     public void initializeCurrenciesTable() {
 
         //Because of the limited requests count provided by "fixer.io" free subscription plan DB won't be cleaned up

@@ -1,11 +1,13 @@
-package model;
+package model.requests;
+
+import model.HistoryContent;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "command")
-public class HistoryCommand {
+public class XmlHistoryRequest implements XmlRequest {
     private String id;
     private HistoryContent history;
 
@@ -24,7 +26,6 @@ public class HistoryCommand {
     }
 
     public void setHistory(HistoryContent history) {
-        this.history = history;
-    }
+            this.history = history;
+        }
 }
-

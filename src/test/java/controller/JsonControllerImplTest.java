@@ -10,8 +10,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import repository.CurrenciesCurrent;
 import repository.CurrenciesHistory;
+import repository.RabbitMQSender;
 import repository.RequestDB;
 
 import java.util.*;
@@ -32,6 +35,9 @@ public class JsonControllerImplTest {
 
     @Mock
     private CurrenciesHistory currenciesHistoryMock;
+
+    @Mock
+    private RabbitMQSender rabbitMQSender;
 
     @InjectMocks
     @Spy
@@ -56,8 +62,8 @@ public class JsonControllerImplTest {
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> jsonController.getCurrencyInfo(request));
+        ResponseEntity<Double> result = jsonController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
@@ -67,8 +73,8 @@ public class JsonControllerImplTest {
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> jsonController.getCurrencyInfo(request));
+        ResponseEntity<Double> result = jsonController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
 
     @Test
@@ -78,8 +84,8 @@ public class JsonControllerImplTest {
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(CURRENCY_VALUE);
 
-        double result = jsonController.getCurrencyInfo(request);
-        Assertions.assertEquals(CURRENCY_VALUE, result);
+        ResponseEntity<Double> result = jsonController.getCurrencyInfo(request);
+        Assertions.assertEquals(CURRENCY_VALUE, result.getBody());
     }
 
     @Test
@@ -88,8 +94,8 @@ public class JsonControllerImplTest {
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> jsonController.getAllCurrenciesByBaseCurrency(request));
+        ResponseEntity<Map<String, Double>> result = jsonController.getAllCurrenciesByBaseCurrency(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
@@ -99,8 +105,8 @@ public class JsonControllerImplTest {
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> jsonController.getAllCurrenciesByBaseCurrency(request));
+        ResponseEntity<Map<String, Double>> result = jsonController.getAllCurrenciesByBaseCurrency(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
 
     @Test
@@ -119,7 +125,7 @@ public class JsonControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(CURRENCY_VALUE);
         when(currenciesCurrentMock.getCurrentRates()).thenReturn(currentRates);
 
-        Map<String, Double> result = jsonController.getAllCurrenciesByBaseCurrency(request);
+        Map<String, Double> result = jsonController.getAllCurrenciesByBaseCurrency(request).getBody();
         Assertions.assertEquals(result.get("USD"), usdValue / usdValue);
         Assertions.assertEquals(result.get("EUR"), eurValue / usdValue);
         Assertions.assertEquals(result.get("RUB"), rubValue / usdValue);
@@ -131,8 +137,8 @@ public class JsonControllerImplTest {
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> jsonController.getHistory(request));
+        ResponseEntity<List<Currency>> result = jsonController.getHistory(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
@@ -143,8 +149,8 @@ public class JsonControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
         when(currenciesHistoryMock.getCurrencyByPeriod(eq(CURRENCY), anyLong())).thenReturn(null);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> jsonController.getHistory(request));
+        ResponseEntity<List<Currency>> result = jsonController.getHistory(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
 
     @Test
@@ -163,7 +169,7 @@ public class JsonControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
         when(currenciesHistoryMock.getCurrencyByPeriod(eq(CURRENCY), anyLong())).thenReturn(expected);
 
-        List<Currency> result = jsonController.getHistory(request);
+        List<Currency> result = jsonController.getHistory(request).getBody();
         Assertions.assertEquals(expected.size(), result.size());
         Assertions.assertIterableEquals(expected, result);
     }

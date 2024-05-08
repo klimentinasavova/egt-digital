@@ -1,6 +1,8 @@
 package controller;
 
 import model.*;
+import model.requests.XmlCurrentRequest;
+import model.requests.XmlHistoryRequest;
 import model.responses.XmlCurrenciesByBaseResponse;
 import model.responses.XmlCurrencyCurrentValueResponse;
 import model.responses.XmlHistoryResponse;
@@ -11,13 +13,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import repository.CurrenciesCurrent;
 import repository.CurrenciesHistory;
+import repository.RabbitMQSender;
 import repository.RequestDB;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -35,6 +39,9 @@ public class XmlControllerImplTest {
 
     @Mock
     private CurrenciesHistory currenciesHistoryMock;
+
+    @Mock
+    private RabbitMQSender rabbitMQSender;
 
     @InjectMocks
     @Spy
@@ -59,14 +66,14 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> xmlController.getCurrencyInfo(request));
+        ResponseEntity response = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -74,15 +81,15 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> xmlController.getCurrencyInfo(request));
+        ResponseEntity response = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -90,15 +97,15 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(CURRENCY_VALUE);
 
-        XmlCurrencyCurrentValueResponse result = xmlController.getCurrencyInfo(request);
-        Assertions.assertEquals(CURRENCY_VALUE, result.getValue());
+        ResponseEntity<XmlCurrencyCurrentValueResponse> result = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(CURRENCY_VALUE, result.getBody().getValue());
     }
 
     @Test
@@ -106,14 +113,14 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> xmlController.getAllCurrenciesByBaseCurrency(request));
+        ResponseEntity<XmlCurrenciesByBaseResponse> response = xmlController.getAllCurrenciesByBaseCurrency(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -121,15 +128,15 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(true);
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> xmlController.getAllCurrenciesByBaseCurrency(request));
+        ResponseEntity<XmlCurrenciesByBaseResponse> response = xmlController.getAllCurrenciesByBaseCurrency(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -137,7 +144,7 @@ public class XmlControllerImplTest {
         GetContent getContent = new GetContent();
         getContent.setCurrency(CURRENCY);
         getContent.setConsumer(CONSUMER);
-        CurrentCommand request = new CurrentCommand();
+        XmlCurrentRequest request = new XmlCurrentRequest();
         request.setGetCommand(getContent);
         request.setId(REQUEST_ID);
 
@@ -154,7 +161,7 @@ public class XmlControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(CURRENCY_VALUE);
         when(currenciesCurrentMock.getCurrentRates()).thenReturn(currentRates);
 
-        XmlCurrenciesByBaseResponse result = xmlController.getAllCurrenciesByBaseCurrency(request);
+        XmlCurrenciesByBaseResponse result = xmlController.getAllCurrenciesByBaseCurrency(request).getBody();
         Assertions.assertEquals(result.getBase(), CURRENCY);
         Assertions.assertEquals(result.getRates().get("USD"), usdValue / usdValue);
         Assertions.assertEquals(result.getRates().get("EUR"), eurValue / usdValue);
@@ -167,14 +174,14 @@ public class XmlControllerImplTest {
         historyContent.setCurrency(CURRENCY);
         historyContent.setConsumer(CONSUMER);
         historyContent.setPeriod(PERIOD);
-        HistoryCommand request = new HistoryCommand();
+        XmlHistoryRequest request = new XmlHistoryRequest();
         request.setHistory(historyContent);
         request.setId(REQUEST_ID);
 
         when(redisMock.addRequestId(REQUEST_ID)).thenReturn(false);
 
-        Assertions.assertThrows(UnsupportedOperationException.class,
-                () -> xmlController.getHistory(request));
+        ResponseEntity response = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -183,7 +190,7 @@ public class XmlControllerImplTest {
         historyContent.setCurrency(CURRENCY);
         historyContent.setConsumer(CONSUMER);
         historyContent.setPeriod(PERIOD);
-        HistoryCommand request = new HistoryCommand();
+        XmlHistoryRequest request = new XmlHistoryRequest();
         request.setHistory(historyContent);
         request.setId(REQUEST_ID);
 
@@ -191,8 +198,8 @@ public class XmlControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
         when(currenciesHistoryMock.getCurrencyByPeriod(eq(CURRENCY), anyLong())).thenReturn(null);
 
-        Assertions.assertThrows(NoSuchElementException.class,
-                () -> xmlController.getHistory(request));
+        ResponseEntity response = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -201,7 +208,7 @@ public class XmlControllerImplTest {
         historyContent.setCurrency(CURRENCY);
         historyContent.setConsumer(CONSUMER);
         historyContent.setPeriod(PERIOD);
-        HistoryCommand request = new HistoryCommand();
+        XmlHistoryRequest request = new XmlHistoryRequest();
         request.setHistory(historyContent);
         request.setId(REQUEST_ID);
 
@@ -218,8 +225,8 @@ public class XmlControllerImplTest {
         when(currenciesCurrentMock.getCurrency(CURRENCY)).thenReturn(Double.NaN);
         when(currenciesHistoryMock.getCurrencyByPeriod(eq(CURRENCY), anyLong())).thenReturn(expected);
 
-        XmlHistoryResponse result = xmlController.getHistory(request);
-        Assertions.assertEquals(expected.size(), result.getHistory().size());
-        Assertions.assertIterableEquals(expected, result.getHistory());
+        ResponseEntity<XmlHistoryResponse> result = xmlController.getCurrencyInfo(request);
+        Assertions.assertEquals(expected.size(), result.getBody().getHistory().size());
+        Assertions.assertIterableEquals(expected, result.getBody().getHistory());
     }
 }

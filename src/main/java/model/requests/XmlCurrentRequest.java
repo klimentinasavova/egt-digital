@@ -1,11 +1,13 @@
-package model;
+package model.requests;
+
+import model.GetContent;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "command")
-public class CurrentCommand {
+public class XmlCurrentRequest implements XmlRequest {
     private String id;
     private GetContent getContent;
 
@@ -27,4 +29,3 @@ public class CurrentCommand {
         this.getContent = getContent;
     }
 }
-

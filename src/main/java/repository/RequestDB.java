@@ -12,7 +12,7 @@ public class RequestDB {
     @Value("${spring.redis.port:6379}")
     private int port;
 
-    Jedis jedis;
+    protected Jedis jedis;
 
     public RequestDB() {
         jedis = new Jedis(host, port);

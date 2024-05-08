@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +27,10 @@ public class RatesCollectorTest {
     @Mock
     private CurrenciesHistory currenciesHistoryMock;
 
+    @Spy
+    private CurrenciesCurrent currentCurrencies;
+
+    @InjectMocks
     private RatesCollector ratesCollector;
 
 
@@ -47,9 +53,7 @@ public class RatesCollectorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        ratesCollector = new RatesCollector();
         ratesCollector.restTemplate = restTemplateMock;
-        ratesCollector.currenciesDB = currenciesHistoryMock;
         ratesCollector.ACCESS_KEY = "access_key";
     }
 

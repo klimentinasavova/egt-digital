@@ -1,20 +1,19 @@
 package repository;
 
+import org.springframework.stereotype.Component;
+
 import java.util.concurrent.ConcurrentHashMap;
 
+@Component
 public class CurrenciesCurrent {
 
-    //TODO use redis cache
+    //For storing current currencies values I have chosen an implementation with ConcurrentHashMap
+    //Redis could also be used for these purposes
 
-    private static CurrenciesCurrent currentCurrencies = new CurrenciesCurrent();
     private ConcurrentHashMap<String, Double> currentRates;
 
-
-    private CurrenciesCurrent() {
-    }
-
-    public static CurrenciesCurrent getCurrentCurrencies() {
-        return currentCurrencies;
+    public CurrenciesCurrent() {
+        currentRates = new ConcurrentHashMap<>();
     }
 
     public ConcurrentHashMap<String, Double> getCurrentRates() {

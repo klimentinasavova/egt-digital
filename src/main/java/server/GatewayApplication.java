@@ -1,22 +1,26 @@
 package server;
 
+import controller.JsonControllerImpl;
+import model.Currency;
+import model.requests.CurrencyHistoryRequest;
+import model.requests.CurrencyRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import repository.CurrenciesHistory;
 import repository.RatesCollector;
 
+import java.util.List;
+import java.util.Map;
+
 
 @SpringBootApplication
-@ComponentScan(basePackages = "java")
+@ComponentScan(basePackages = "controller;model;repository")
 public class GatewayApplication {
-
 
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);
-
-        new CurrenciesHistory().initializeCurrenciesTable();
-        new RatesCollector().collectCurrencyData();
 
         System.out.println("<<< READY >>>");
 
@@ -27,13 +31,15 @@ public class GatewayApplication {
 //        JsonControllerImpl server1 = new JsonControllerImpl();
 //        CurrencyRequest requestCurrent = new CurrencyRequest("b89577fe-8c37-4962-8af3-7cb89a245160",
 //                "1714992664", "1234", "USD");
-//        CurrencyHistoryRequest requestHistory = new CurrencyHistoryRequest("b89577fe-8c37-4962-8af3-7cb89a245160",
+//        CurrencyRequest requestCurrent2 = new CurrencyRequest("b89577fe-8c37-4962-8af3-7cb89a245161",
+//                "1714992664", "1234", "USD");
+//        CurrencyHistoryRequest requestHistory = new CurrencyHistoryRequest("b89577fe-8c37-4962-8af3-7cb89a245162",
 //                "1714992664", "1234", "USD", 24);
 //
 //        double usdCurrentValue = server1.getCurrencyInfo(requestCurrent);
 //        System.out.println("USD current value is: " + usdCurrentValue);
 //
-//        Map<String, Double> currencies = server1.getAllCurrenciesByBaseCurrency(requestCurrent);
+//        Map<String, Double> currencies = server1.getAllCurrenciesByBaseCurrency(requestCurrent2);
 //        System.out.println("all values by usd base are: " + currencies);
 //
 //        List<Currency> usdHistory = server1.getHistory(requestHistory);
