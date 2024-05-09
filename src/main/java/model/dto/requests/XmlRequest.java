@@ -1,4 +1,4 @@
-package model.requests;
+package model.dto.requests;
 
 public interface XmlRequest {
 }

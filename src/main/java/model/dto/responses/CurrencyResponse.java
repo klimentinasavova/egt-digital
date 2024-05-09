@@ -1,4 +1,4 @@
-package model.responses;
+package model.dto.responses;
 
 import java.time.LocalDateTime;
 import java.util.List;

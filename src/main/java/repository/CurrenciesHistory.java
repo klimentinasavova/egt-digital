@@ -1,7 +1,10 @@
 package repository;
 
+import controller.JsonControllerImpl;
 import model.Currency;
-import model.responses.CurrencyResponse;
+import model.dto.responses.CurrencyResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -22,6 +25,8 @@ public class CurrenciesHistory {
     private String password;
 
     private static final String TABLE_NAME = "currencies";
+    private final Logger logger = LogManager.getLogger(CurrenciesHistory.class);
+
 
     public CurrenciesHistory() {
         initializeCurrenciesTable();
@@ -38,11 +43,7 @@ public class CurrenciesHistory {
     }
 
     public void saveCurrenciesData(CurrencyResponse cr) {
-        String insertSQL = "INSERT INTO "+ TABLE_NAME +
-                "(timestamp, " +
-                "currency, " +
-                "value ) " +
-                "VALUES (?, ?, ?)";
+        String insertSQL = String.format("INSERT INTO %s (timestamp, currency, value ) VALUES (?, ?, ?)", TABLE_NAME);
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
@@ -53,16 +54,16 @@ public class CurrenciesHistory {
                 preparedStatement.setString(2, currency);
                 preparedStatement.setString(3, cr.rates().get(currency).toString());
                 preparedStatement.executeUpdate();
-                System.out.println("Currency: " + currency + " inserted successfully.");
+                logger.trace("Currency: {} inserted successfully.", currency);
             }
 
         } catch (SQLException e) {
-            System.err.println("Error saving currency data: " + e.getMessage());
+            logger.error("Error saving currency data: {}", e.getMessage());
         }
     }
 
     public List<Currency> getAllCurrencies() {
-        String selectSQL = "SELECT * FROM " + TABLE_NAME;
+        String selectSQL = String.format("SELECT * FROM %s ", TABLE_NAME);
 
         List<Currency> currencies = new LinkedList<>();
 
@@ -74,16 +75,16 @@ public class CurrenciesHistory {
             while (resultSet.next()) {
                 currencies.add(parseCurrency(resultSet));
             }
-            System.out.println("Successfully retrieved currencies from table " + TABLE_NAME + ".");
+            logger.debug("Successfully retrieved currencies data from table {}.", TABLE_NAME);
         } catch (SQLException e) {
-            System.err.println("Error retrieving currencies from table: " + e.getMessage());
+            logger.error("Error retrieving currencies from table: {}", e.getMessage());
         }
         return  currencies;
     }
 
     public List<Currency> getCurrencyByPeriod( String currency, long period) {
-        String selectSQL = "SELECT * FROM " + TABLE_NAME +
-                " WHERE currency='" + currency + "' AND timestamp>'" + String.valueOf(period) + "';";
+        String selectSQL = String.format("SELECT * FROM %s WHERE currency='%s' AND timestamp>'%s';",
+                TABLE_NAME, currency, String.valueOf(period));
         List<Currency> currencyData = new LinkedList<>();
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
@@ -94,17 +95,16 @@ public class CurrenciesHistory {
             while (resultSet.next()) {
                 currencyData.add(parseCurrency(resultSet));
             }
-            System.out.println("Successfully retrieved currency data from table " + TABLE_NAME + ".");
+            logger.debug("Successfully retrieved currency data from table {}.", TABLE_NAME);
 
         } catch (SQLException e) {
-            System.err.println("Error retrieving  currency data from table: " + e.getMessage());
+            logger.error("Error retrieving currency data from table: {}", e.getMessage());
         }
         return currencyData;
     }
 
     public List<Currency> getCurrency( String currency) {
-        String selectSQL = "SELECT * FROM " + TABLE_NAME +
-                " WHERE currency='" + currency + "';";
+        String selectSQL = String.format("SELECT * FROM %s WHERE currency='%s';", TABLE_NAME, currency);
         List<Currency> currencyData = new LinkedList<>();
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
@@ -115,10 +115,10 @@ public class CurrenciesHistory {
             while (resultSet.next()) {
                 currencyData.add(parseCurrency(resultSet));
             }
-            System.out.println("Successfully retrieved currency data from table " + TABLE_NAME + ".");
+            logger.debug("Successfully retrieved currency data from table {}.", TABLE_NAME);
 
         } catch (SQLException e) {
-            System.err.println("Error retrieving  currency data from table: " + e.getMessage());
+            logger.error("Error retrieving currency data from table: {}", e.getMessage());
         }
         return currencyData;
     }
@@ -144,24 +144,24 @@ public class CurrenciesHistory {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createTableSQL);
-            System.out.println("Table with name " + TABLE_NAME + " created successfully.");
+            logger.info("Table with name {} created successfully.", TABLE_NAME);
 
         } catch (SQLException e) {
-            System.err.println("Table creation failed: " + e.getMessage());
+            logger.error("Table creation failed: {}", e.getMessage());
         }
     }
 
     private void deleteTables() {
-        String deleteTableStatement = "DROP TABLE IF EXISTS " + TABLE_NAME;
+        String deleteTableStatement = String.format("DROP TABLE IF EXISTS %s" + TABLE_NAME);
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(deleteTableStatement);
-            System.out.println("Table with name " + TABLE_NAME + " deleted successfully.");
+            logger.info("Table with name {} deleted successfully.", TABLE_NAME);
 
         } catch (SQLException e) {
-            System.err.println("Table deletion failed: " + e.getMessage());
+            logger.error("Table deletion failed: {}", e.getMessage());
         }
     }
 }

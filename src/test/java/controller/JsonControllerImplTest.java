@@ -1,7 +1,7 @@
 package controller;
 
-import model.requests.CurrencyHistoryRequest;
-import model.requests.CurrencyRequest;
+import model.dto.requests.CurrencyHistoryRequest;
+import model.dto.requests.CurrencyRequest;
 import model.Currency;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

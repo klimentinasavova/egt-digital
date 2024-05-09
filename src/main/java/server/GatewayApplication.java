@@ -1,18 +1,8 @@
 package server;
 
-import controller.JsonControllerImpl;
-import model.Currency;
-import model.requests.CurrencyHistoryRequest;
-import model.requests.CurrencyRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
-import repository.CurrenciesHistory;
-import repository.RatesCollector;
-
-import java.util.List;
-import java.util.Map;
 
 
 @SpringBootApplication

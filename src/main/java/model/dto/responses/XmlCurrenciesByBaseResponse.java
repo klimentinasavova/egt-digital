@@ -1,4 +1,4 @@
-package model.responses;
+package model.dto.responses;
 
 import model.Currency;
 

@@ -1,8 +1,8 @@
 package controller;
 
-import model.requests.XmlCurrentRequest;
-import model.requests.XmlRequest;
-import model.responses.XmlCurrenciesByBaseResponse;
+import model.dto.requests.XmlCurrentRequest;
+import model.dto.requests.XmlRequest;
+import model.dto.responses.XmlCurrenciesByBaseResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface XmlController {

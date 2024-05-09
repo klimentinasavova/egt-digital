@@ -1,13 +1,12 @@
 package controller;
 
 import model.Currency;
-import model.requests.CurrencyHistoryRequest;
-import model.requests.CurrencyRequest;
+import model.dto.requests.CurrencyHistoryRequest;
+import model.dto.requests.CurrencyRequest;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public interface JsonController {
 

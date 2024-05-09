@@ -1,7 +1,7 @@
 package repository;
 
 import exceptions.CurrencyException;
-import model.responses.CurrencyResponse;
+import model.dto.responses.CurrencyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,19 +37,17 @@ public class RatesCollector {
         if(ACCESS_KEY == null || ACCESS_KEY.isBlank()) {
             throw new IllegalArgumentException("No access key provided.");
         }
-//        CurrencyResponse response = restTemplate.getForObject(url + ACCESS_KEY, CurrencyResponse.class);
+        CurrencyResponse response = restTemplate.getForObject(url + ACCESS_KEY, CurrencyResponse.class);
 
 //        Use for manual testing because of the limited request included in the free fixer.io account
-        ConcurrentHashMap<String, Double> rates = new ConcurrentHashMap<>();
-        rates.put("AED", 3.955554);
-        rates.put("AFN", 77.789909);
-        rates.put("ALL", 100.631706);
-        rates.put("AMD", 417.119305);
-        rates.put("ANG", 1.937773);
-        rates.put("AOA", 900.308844);
-        CurrencyResponse response = new CurrencyResponse(true, "1714992664", "EUR", "2024-05-06", rates);
-
-        System.out.println(response);
+//        ConcurrentHashMap<String, Double> rates = new ConcurrentHashMap<>();
+//        rates.put("AED", 3.955554);
+//        rates.put("AFN", 77.789909);
+//        rates.put("ALL", 100.631706);
+//        rates.put("AMD", 417.119305);
+//        rates.put("ANG", 1.937773);
+//        rates.put("AOA", 900.308844);
+//        CurrencyResponse response = new CurrencyResponse(true, "1714992664", "EUR", "2024-05-06", rates);
 
         if (response == null || !response.success()) {
             throw new CurrencyException("Error retrieving currency data.");

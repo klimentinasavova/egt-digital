@@ -1,11 +1,11 @@
 package controller;
 
 import model.*;
-import model.requests.XmlCurrentRequest;
-import model.requests.XmlHistoryRequest;
-import model.responses.XmlCurrenciesByBaseResponse;
-import model.responses.XmlCurrencyCurrentValueResponse;
-import model.responses.XmlHistoryResponse;
+import model.dto.requests.XmlCurrentRequest;
+import model.dto.requests.XmlHistoryRequest;
+import model.dto.responses.XmlCurrenciesByBaseResponse;
+import model.dto.responses.XmlCurrencyCurrentValueResponse;
+import model.dto.responses.XmlHistoryResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package repository;
 
 import exceptions.CurrencyException;
-import model.responses.CurrencyResponse;
+import model.dto.responses.CurrencyResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

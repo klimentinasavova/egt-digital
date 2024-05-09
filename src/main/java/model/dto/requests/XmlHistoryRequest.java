@@ -1,15 +1,15 @@
-package model.requests;
+package model.dto.requests;
 
-import model.GetContent;
+import model.HistoryContent;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "command")
-public class XmlCurrentRequest implements XmlRequest {
+public class XmlHistoryRequest implements XmlRequest {
     private String id;
-    private GetContent getContent;
+    private HistoryContent history;
 
     @XmlAttribute
     public String getId() {
@@ -20,12 +20,12 @@ public class XmlCurrentRequest implements XmlRequest {
         this.id = id;
     }
 
-    @XmlElement(name = "get")
-    public GetContent getGetContent() {
-        return getContent;
+    @XmlElement
+    public HistoryContent getHistory() {
+        return history;
     }
 
-    public void setGetCommand(GetContent getContent) {
-        this.getContent = getContent;
-    }
+    public void setHistory(HistoryContent history) {
+            this.history = history;
+        }
 }

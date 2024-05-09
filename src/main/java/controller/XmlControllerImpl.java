@@ -2,12 +2,14 @@ package controller;
 
 
 import model.Currency;
-import model.requests.XmlCurrentRequest;
-import model.requests.XmlHistoryRequest;
-import model.requests.XmlRequest;
-import model.responses.XmlCurrenciesByBaseResponse;
-import model.responses.XmlCurrencyCurrentValueResponse;
-import model.responses.XmlHistoryResponse;
+import model.dto.requests.XmlCurrentRequest;
+import model.dto.requests.XmlHistoryRequest;
+import model.dto.requests.XmlRequest;
+import model.dto.responses.XmlCurrenciesByBaseResponse;
+import model.dto.responses.XmlCurrencyCurrentValueResponse;
+import model.dto.responses.XmlHistoryResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,8 +44,12 @@ public class XmlControllerImpl implements XmlController {
     private RabbitMQSender rabbitMQSender;
 
     private static final String SERVICE_NAME = "xml_service";
+    private static final String CURRENCY_INFO_PATH = "/xml_api/command";
+    private static final String CURRENCY_ALL_INFO_PATH = "/xml_api/command/all";
 
-    @PostMapping(value = "/xml_api/command",
+    private final Logger logger = LogManager.getLogger(XmlControllerImpl.class);
+
+    @PostMapping(value = CURRENCY_INFO_PATH,
             consumes = MediaType.APPLICATION_XML_VALUE,
             produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
@@ -66,24 +72,24 @@ public class XmlControllerImpl implements XmlController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping(value = "/xml_api/command/all",
+    @PostMapping(value = CURRENCY_ALL_INFO_PATH,
             consumes = MediaType.APPLICATION_XML_VALUE,
             produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public ResponseEntity<XmlCurrenciesByBaseResponse> getAllCurrenciesByBaseCurrency
             (@RequestBody XmlCurrentRequest request) {
         String requestId = request.getId();
-        String client = request.getGetContent().getConsumer();
         String currency = request.getGetContent().getCurrency();
-        long timestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
         boolean successfullyAdded = redis.addRequestId(requestId);
         if (!successfullyAdded) {
+            logger.debug("/xml_api/command/all: Request id : {} has already been used.", requestId);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         Double baseValue = currentCurrencies.getCurrency(currency);
         if (baseValue.isNaN()) {
+            logger.debug("/xml_api/command/all: No information for currency: {}", currency);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
@@ -92,48 +98,58 @@ public class XmlControllerImpl implements XmlController {
             rates.put(key, value / baseValue);
         });
 
-        rabbitMQSender.sendMessage(SERVICE_NAME + ", " + requestId + ", " + timestamp + ", " + client);
+        logger.trace("/xml_api/command/all: Successfully retrieved information for currencies: {}", currency);
+        sendStatisticsData(requestId, request.getGetContent().getConsumer());
         return ResponseEntity.ok(new XmlCurrenciesByBaseResponse(rates, currency));
     }
 
     private XmlCurrencyCurrentValueResponse getCurrencyInfo(XmlCurrentRequest request) {
         String requestId = request.getId();
-        String client = request.getGetContent().getConsumer();
         String currency = request.getGetContent().getCurrency();
-        long timestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
         boolean successfullyAdded = redis.addRequestId(requestId);
         if (!successfullyAdded) {
+            logger.debug("/xml_api/command: Request id : {} has already been used.", requestId);
             throw new UnsupportedOperationException("Request id: " + requestId + " has already been used.");
         }
 
         Double value = currentCurrencies.getCurrency(currency);
         if (value.isNaN()) {
+            logger.debug("/xml_api/command: No information for currency: {}", currency);
             throw new NoSuchElementException("No information found for currency " + currency);
         }
-        rabbitMQSender.sendMessage(SERVICE_NAME + ", " + requestId + ", " + timestamp + ", " + client);
+
+        logger.trace("/xml_api/command: Successfully retrieved information for currency: {}", currency);
+        sendStatisticsData(requestId, request.getGetContent().getConsumer());
         return new XmlCurrencyCurrentValueResponse(value);
     }
 
     private XmlHistoryResponse getHistory(XmlHistoryRequest request) {
         String requestId = request.getId();
-        String client = request.getHistory().getConsumer();
         String currency = request.getHistory().getCurrency();
         int period = request.getHistory().getPeriod();
         long beforeTimestamp = LocalDateTime.now().minusHours(period).toEpochSecond(ZoneOffset.UTC);
-        long timestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
         boolean successfullyAdded = redis.addRequestId(requestId);
         if (!successfullyAdded) {
+            logger.debug("/xml_api/command: Request id : {} has already been used.", requestId);
             throw new UnsupportedOperationException("Request id: " + requestId + " has already been used.");
         }
 
         List<Currency> history = currenciesDB.getCurrencyByPeriod(currency, beforeTimestamp);
         if (history == null || history.isEmpty()) {
+            logger.debug("/xml_api/command: No information for currency: {}", currency);
             throw new NoSuchElementException("No information found for currency " + currency);
         }
 
-        rabbitMQSender.sendMessage(SERVICE_NAME + ", " + requestId + ", " + timestamp + ", " + client);
+        logger.trace("/xml_api/command: Successfully retrieved history information for currency: {}", currency);
+        sendStatisticsData(requestId, request.getHistory().getConsumer());
         return new XmlHistoryResponse(history);
     }
+
+    private void sendStatisticsData(String requestId, String client) {
+        long timestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        rabbitMQSender.sendMessage(SERVICE_NAME + ", " + requestId + ", " + timestamp + ", " + client);
+    }
+
 }
